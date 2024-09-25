@@ -1,36 +1,46 @@
-# Sap Flow Calculation and Water Usage Estimation
+### **Step-by-Step Explanation of Sap Flow Calculation**
 
-## Overview
+```javascript
+// 1. Uncorrected Values
+// These are the raw measurements from the inner and outer probes.
+const UncorrectedInner = getValueFromData(message.uplink_message.decoded_payload.data, "uncorrected-inner");
+const UncorrectedOuter = getValueFromData(message.uplink_message.decoded_payload.data, "uncorrected-outer");
 
-This repository contains a versatile JavaScript script designed to process raw sap flow data from SFM1x-LoRa devices. The script converts uncorrected inner and outer heat velocity values into corrected sap flow measurements and calculates hourly and daily water usage. The code is platform-agnostic and can be integrated into various data processing pipelines or platforms.
+// 2. Applying Offsets
+// Offsets are applied to account for sensor biases or inaccuracies. 
+// The offset values (offset_inner, offset_outer) are subtracted from the uncorrected readings.
+const Vh_outer = UncorrectedOuter + offset_outer;
+const Vh_inner = UncorrectedInner + offset_inner;
 
-## Features
+// 3. Correcting the Heat Pulse Velocity
+// Multiply the heat pulse velocities (Vh_outer and Vh_inner) by a correction factor (wc), 
+// which compensates for the characteristics of the wood (density, thermal diffusivity, etc.).
+const Vc_outer = Vh_outer * wc;
+const Vc_inner = Vh_inner * wc;
 
-- **Data Processing**: Converts raw uncorrected inner and outer heat velocity values into corrected sap flow measurements.
-- **Sap Flow Calculations**: Computes sap velocities and total sap flow using scientifically validated formulas.
-- **Hourly and Daily Water Usage**: Calculates hourly and daily water usage based on the processed sap flow data.
-- **Platform Independence**: The script is designed to be used on any platform that supports Node.js.
+// 4. Calculating Sap Velocity
+// The sap velocity (Vs_outer and Vs_inner) is derived by multiplying the corrected heat pulse velocity (Vc) 
+// with the factor (fsv), which is a flow sensitivity value that converts heat pulse velocity into sap velocity.
+const Vs_outer = Vc_outer * fsv;
+const Vs_inner = Vc_inner * fsv;
 
-## Table of Contents
+// 5. Calculating Sap Flow in kg/hr
+// The sap flow in each annulus (outer_sapflow and inner_sapflow) is calculated by multiplying sap velocity (Vs) 
+// with the annulus area (outer_sapwood_annulus and inner_sapwood_annulus), and dividing by 1000 
+// to convert cm/hr into kg/hr.
+const outer_sapflow = (Vs_outer * outer_sapwood_annulus) / 1000;
+const inner_sapflow = (Vs_inner * inner_sapwood_annulus) / 1000;
 
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Understanding the Calculations](#understanding-the-calculations)
-  - [1. Raw Data from SFM1x-LoRa Devices](#1-raw-data-from-sfm1x-lora-devices)
-  - [2. Converting Uncorrected Values to Corrected Values](#2-converting-uncorrected-values-to-corrected-values)
-  - [3. Sap Flow Calculations](#3-sap-flow-calculations)
-  - [4. Hourly and Daily Water Usage Calculations](#4-hourly-and-daily-water-usage-calculations)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
+// 6. Remainder Sap Flow
+// Depending on the remainder sapwood area, a method is selected to calculate the sap flow in the remaining area of the trunk.
+// Here, the "linear_decay" method uses half of the inner sap velocity to calculate the flow in the remainder.
+let rem_sapflow = 0;
+if (rem_type === "linear_decay") {
+  rem_sapflow = (Vs_inner / 2 * rem_sapwood_annulus) / 1000;
+} else if (rem_type === "inner_velocity") {
+  rem_sapflow = (Vs_inner * rem_sapwood_annulus) / 1000;
+}
 
-## Prerequisites
-
-- **Node.js** installed on your machine.
-- **npm** (Node Package Manager) for managing dependencies.
-- **Sample Data** from SFM1x-LoRa devices in JSON format.
-
-## Installation
-
+// 7. Total Sap Flow
+// Finally, the total sap flow is the sum of the outer, inner, and remainder sap flows, giving the final value in kg/hr.
+const total_sapflow = outer_sapflow + inner_sapflow + rem_sapflow;
