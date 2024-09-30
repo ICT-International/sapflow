@@ -7,11 +7,11 @@ Confirmed Stable: 23rd Feb 2024
 R1-1-14
 Firmware created 15th Nov 2023
 Confirmed Stable: 23rd Jan 2024
-> Adds feature to automatically shut down SFM instrument after 30minutes when in manual mode for when the following conditions are true:
+> Adds feature to automatically shut down SFM instrument after 30minutes when in manual mode to avoid battery discharging for when the following conditions are true:
 > 1) No USB Cable connected.
 > 2) BlueTooth Connection not connected to software.
 > 3) No External supply power connected via the ICT BusPlugs (such as Solar Panel, Battery, PSU, or other power generation systems.)
-> Solves issue with SFM1x discharging due to powered on and in idle state.
+> 
 > Introduces known bug with SFM1x-C Cellular Cat-M1/NB-IoT with UCMI r1-0-13MQTT firmware, work around: UTC time needs to be manually set locally for instrument time.
 	
 	
