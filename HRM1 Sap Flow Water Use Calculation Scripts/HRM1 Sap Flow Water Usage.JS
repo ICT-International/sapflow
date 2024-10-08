@@ -48,7 +48,7 @@ async function processMessages(messages) {
           let circumference = 1.3674; // Circumference of plant at point of measurement in metres, a 10cm radius or 20cm diameter Tree/Plant Standard
           let wc = 1.7283; // Wounding Coefficient
           let bark_thickness = 0.0050; // Bark Thickness in meters, here 0.5cm
-          let sapwood_depth = 0.05; // Sapwood depth in meters, here 4.2cm
+          let sapwood_depth = 0.0420; // Sapwood depth in meters, here 4.2cm
           let probe_length = 0.035; // Probe length in meters, here HRM1 Probe Set = 3.5cm.
           let probe_depths = [0.0075, 0.0225]; // Measurement points within the Probe measuremed in meters:
               /*
