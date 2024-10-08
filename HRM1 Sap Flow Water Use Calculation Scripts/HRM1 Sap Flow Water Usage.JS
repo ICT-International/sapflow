@@ -43,7 +43,7 @@ async function processMessages(messages) {
           const UncorrectedInner = getValueFromData(message.uplink_message.decoded_payload.data, "uncorrected-inner");
           const UncorrectedOuter = getValueFromData(message.uplink_message.decoded_payload.data, "uncorrected-outer");
 
-          // --- Default Metadata ---
+          // --- Metadata ---
           // Physical Probe Installation Protocol
           let circumference = 1.3674; // meters
           let wc = 1.7283;
