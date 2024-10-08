@@ -45,17 +45,23 @@ async function processMessages(messages) {
 
           // --- Metadata ---
           // Physical Probe Installation Protocol
-          let circumference = 1.3674; // meters
-          let wc = 1.7283;
-          let bark_thickness = 0.01; // meters
-          let sapwood_depth = 0.05; // meters
-          let probe_length = 0.035; // meters
-          let probe_depths = [0.0075, 0.0225]; // meters
-          let fsv = 0.64347;
-          let offset_inner = -7.62;
-          let offset_outer = -4.2;
-          let probe_edge = 0.032; // meters
-          let rem_type = "linear_decay";
+          let circumference = 1.3674; // Circumference of plant at point of measurement in metres, a 10cm radius or 20cm diameter Tree/Plant Standard
+          let wc = 1.7283; // Wounding Coefficient
+          let bark_thickness = 0.0050; // Bark Thickness in meters, here 0.5cm
+          let sapwood_depth = 0.05; // Sapwood depth in meters, here 4.2cm
+          let probe_length = 0.035; // Probe length in meters, here HRM1 Probe Set = 3.5cm.
+          let probe_depths = [0.0075, 0.0225]; // Measurement points within the Probe measuremed in meters:
+              /*
+                0 reference in array = outer thermistor position within the sapwood measured, starting point is the
+                transition from bark to sapwood.
+                1 reference in array = inner thermistor position within the sapwood measured, starting point is the
+                transition from bark to sapwood.
+              */
+          let fsv = 0.64347; // Sap Flow Factor
+          let offset_inner = 0; //Offset to zero measurement 
+          let offset_outer = 0; //Offset to zero measurement
+          let probe_edge = 0.030; // Probe edge in meters
+          let rem_type = "linear_decay"; //Remainder type, linear_decay or inner_velocity
 
           // --- Convert Units from Meters to Centimeters ---
           probe_edge *= 100;
