@@ -57,7 +57,7 @@ async function processMessages(messages) {
                 0 reference in array = outer thermistor position within the sapwood (measurement point to the surface of the Xylem).
                 1 reference in array = inner thermistor position within the sapwood (measurement point to the surface of the Xylem).
               */
-          let fsv = 0.64347;                  // Sap Flow Factor  
+          let fsv = 0.64347;                  // Sap Flow Factor, Simplified "Vs" Calculation for Wood and Water Thermal Properties. 
           let offset_inner = 0;               // Manually applied Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
           let offset_outer = 0;               // Manually applied Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
           let probe_edge = 0.030;             // Probe edge in meters, Depth of the probe tip in the Xylem from the installation surface, e.g: probe_depths[1] + 0.0075m
