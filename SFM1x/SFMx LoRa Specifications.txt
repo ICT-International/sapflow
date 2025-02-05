@@ -1,0 +1,7 @@
+SFMx LoRa Specifications
+LoRa MAC Version: 1.0.3
+OTAA Supported: Yes
+ABP Supported: Beta testing only
+ADR Supported: Yes
+Confirmed Messaging Supported: No (off by design)
+Sub Bands Supported for AU915 and US915: FSB1 to FSB8.
