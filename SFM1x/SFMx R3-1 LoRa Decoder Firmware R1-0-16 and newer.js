@@ -1,6 +1,6 @@
-/* SFM1x R3-1 Reduced Packet Decoder Base
+/* SFMx R3-1 Reduced Packet Decoder Base
 	Includes Base Diagnostic and Switchable Result Packet.
-	Suits SFM1x LoRa UCMI Firmware Revision r1-0-16 and newer all regions.
+	Suits SFMx / SFM1x LoRa UCMI Firmware Revision r1-0-16 and newer all regions.
 	Port1 Data containing Sap Flow uncorrected and Battery Voltage is maximum of 10-byte payload.
 	Port10 Diagnostic Payload directly following OTAA Join is a maximum of 4-bytes.
 */
