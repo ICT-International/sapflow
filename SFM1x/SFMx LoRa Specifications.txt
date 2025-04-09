@@ -4,8 +4,8 @@ UCMI Firmware Version(s) ≤r1-0-16:
   LoRa MAC Version: 1.0.3 (With RP001 Regional Parameters 1.0.3 revision A)
   OTAA Supported: Yes
   ABP Supported: Beta testing stage only
-  ADR Supported: Yes
-  Confirmed Messaging Supported: No (off by design)
+  ADR Supported: Yes (Confirmed operational in firmware ≥r1-0-16)
+  Confirmed Messaging Supported: No (disabled by design)
   Sub Bands Supported for AU915 and US915: FSB1 to FSB8.
 
 UCMI Firmware Version(s) ≥r1-2-1:
@@ -13,5 +13,5 @@ UCMI Firmware Version(s) ≥r1-2-1:
   OTAA Supported: Yes
   ABP Supported: Beta testing stage only
   ADR Supported: Yes
-  Confirmed Messaging Supported: No (off by design)
+  Confirmed Messaging Supported: No (disabled by design)
   Sub Bands Supported for AU915 and US915: FSB1 to FSB8.
