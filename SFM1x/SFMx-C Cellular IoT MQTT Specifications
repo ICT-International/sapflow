@@ -1,0 +1,41 @@
+SFMx-C Cellular IoT & MQTT Specifications
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+UCMI Firmware Version(s) ≤r1-0-13:
+	Cellular Supported Features/Settings:
+		* LTE-M CAT-M1 and NB-IoT NB2
+		* BG95-M6 Modem
+		* APN
+		* Operator Code / MCC+MNC
+		  Code needs to be set for operation, E.g. Telstra 4G Network: 50501
+		* APN Username
+		* APN Password
+
+	MQTT Supported Features/Settings:
+		* MQTT Host Name
+		* MQTT Port Number: 1883 or 8883 	(Limited to min/max four digits)
+		* MQTT ClientID
+		* MQTT Username
+		* MQTT Password
+		* MQTT Topic-Publish
+
+UCMI Firmware Version(s) ≥r1-0-16:
+	Cellular Supported Features/Settings:
+		* LTE-M CAT-M1 and NB-IoT NB2
+		* BG95-M6 Modem
+		* APN								(Can be Blank for Networks that require it).
+		* Operator Code / MCC+MNC
+		  Code needs to be set for operation, E.g. Telstra 4G Network: 50501
+		* APN Username
+		* APN Password
+		* Diagnostics:
+			RSSI: Radio Signal Strength Indicator reports the signal level from cell tower to Device, closer to zero indicates stronger signal.
+			(report populates after transmission complete).
+		* Automatic Cell tower time synchronisation for MQTT message preparation. 
+		
+	MQTT Supported Features/Settings:
+		* MQTT Host Name
+		* MQTT Port Number	 				(four minimum to five maximum digits).
+		* MQTT ClientID 					(32 Character limit).
+		* MQTT Username	
+		* MQTT Password
+		* MQTT Topic-Publish
