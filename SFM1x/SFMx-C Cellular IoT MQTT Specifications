@@ -12,7 +12,7 @@ UCMI Firmware Version(s) ≤r1-0-13:
 
 	MQTT Supported Features/Settings:
 		* MQTT Host Name
-		* MQTT Port Number: 1883 or 8883 	(Limited to min/max four digits)
+		* MQTT Port Number: 1883 or 8883 (Limited to min/max four digits)
 		* MQTT ClientID
 		* MQTT Username
 		* MQTT Password
@@ -22,7 +22,7 @@ UCMI Firmware Version(s) ≥r1-0-16:
 	Cellular Supported Features/Settings:
 		* LTE-M CAT-M1 and NB-IoT NB2
 		* BG95-M6 Modem
-		* APN								(Can be Blank for Networks that require it).
+		* APN (Can be Blank for Networks that require it).
 		* Operator Code / MCC+MNC
 		  Code needs to be set for operation, E.g. Telstra 4G Network: 50501
 		* APN Username
@@ -34,8 +34,8 @@ UCMI Firmware Version(s) ≥r1-0-16:
 		
 	MQTT Supported Features/Settings:
 		* MQTT Host Name
-		* MQTT Port Number	 				(four minimum to five maximum digits).
-		* MQTT ClientID 					(32 Character limit).
+		* MQTT Port Number (four minimum to five maximum digits).
+		* MQTT ClientID (32 Character max limit).
 		* MQTT Username	
 		* MQTT Password
 		* MQTT Topic-Publish
