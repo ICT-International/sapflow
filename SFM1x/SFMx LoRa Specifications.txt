@@ -9,7 +9,6 @@ UCMI Firmware Version(s) ≥r1-2-1:
   Confirmed Messaging Supported: No (disabled by design)
   Sub Bands Supported for AU915 and US915: FSB1 to FSB8.
 
-
 UCMI Firmware Version(s) ≤r1-0-16:
   LoRa MAC Version: 1.0.3 (With RP001 Regional Parameters 1.0.3 revision A)
   Supports Class A  (Class B and C Not Supported)
