@@ -1,3 +1,10 @@
+WARNING:
+Mainboard firmware published within are strictly only for updating SFMx-UB models that do not contain IoT communications modules.
+* Installing this firmware on models that do have IoT communications may render the device inoperable.
+* Please Contact ICT International regarding firmware updating of IoT SFMx models.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 R1-1-15
 Firmware created 9th Feb 2024
 Confirmed Stable: 23rd Feb 2024
