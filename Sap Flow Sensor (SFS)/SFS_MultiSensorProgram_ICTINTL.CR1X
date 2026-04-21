@@ -1,0 +1,192 @@
+'************************************************************
+'   SFS Multi-Sensor CRBasic Program (Concurrent SDI-12 Mode)
+'   ICT International Pty. Ltd.
+'   Author: Rahinul Hoque
+'   Date: 11 March 2026
+'
+' Description:
+' This CRBasic program supports one or more ICT International
+' SFS (Sap Flow Sensors) connected to a Campbell Scientific
+' datalogger using standard SDI-12 commands (C!, D0!, D1!, D2!).
+' The program is fully scalable—simply set NumSensors to match
+' the number of SFS units connected to the SDI-12 port.
+'
+' Each measurement cycle performs:
+'   • A C! command to initiate HRM measurement
+'   • A 156-second wait for the heat-pulse cycle to complete
+'   • Sequential retrieval of D0, D1, and D2 data frames
+'   • Extraction of six values per sensor:
+'       - Uncorrected outer HP velocity
+'       - Uncorrected inner HP velocity
+'       - Corrected outer HP velocity
+'       - Corrected inner HP velocity
+'       - Corrected outer sap velocity
+'       - Corrected inner sap velocity
+'
+' Program Features:
+'   • Supports 1–n SFS sensors on a single SDI-12 port
+'   • Automatic parsing of all SDI-12 D-frame responses
+'   • Robust handling of partial or malformed SDI-12 strings
+'   • Separate output arrays for corrected and uncorrected values
+'   • Logging interval and scan interval fully user-configurable
+'
+' Wiring Summary:
+'   • PWR (White)  → 12V
+'   • DATA (Blue)  → SDI-12 port (default: C1)
+'   • GND (Black)  → G
+'
+' This program is designed for reliable, scalable, and field-ready
+' SFS monitoring on Campbell Scientific dataloggers using the
+' standard SDI-12 command set.
+'************************************************************
+
+'======= Declarations =======
+Const NumSensors = 1 'Change this value to the number of SFS connected to the port'
+Const SDI12_port = C1 'Change this to the port number in use'
+Dim SensorAddr(NumSensors) As String * 1
+Public SDI12_Values(NumSensors, 6) As Float
+Public Uncorrected_outr_HPV(NumSensors) As Float
+Public Uncorrected_inr_HPV(NumSensors) As Float
+Public Corrected_outr_HPV(NumSensors) As Float
+Public Corrected_inr_HPV(NumSensors) As Float
+Public Corrected_outr_Sap_Flow(NumSensors) As Float
+Public Corrected_inr_Sap_Flow(NumSensors) As Float
+Public Sensor_Measuring(NumSensors) As Boolean
+Public Measurement_Started As Boolean
+Public Supercaps_Charging As Boolean
+Dim SDI12_String As String * 75
+Dim valueStr As String * 25
+Dim i As Long, j As Long, cmdIndex As Long, signPos As Long, s As Long
+
+
+'======= Table Declaration =======
+
+DataTable(SFS_ConcurrentMode, True, -1)
+  DataInterval(0, 10, Min, 1) '*Note: Change the logging interval to the desired value; by default it is set to 10 minutes'
+  Sample(NumSensors, Uncorrected_outr_HPV(), Float)
+  Sample(NumSensors, Uncorrected_inr_HPV(), Float)
+  Sample(NumSensors, Corrected_outr_HPV(), Float)
+  Sample(NumSensors, Corrected_inr_HPV(), Float)
+  Sample(NumSensors, Corrected_outr_Sap_Flow(), Float)
+  Sample(NumSensors, Corrected_inr_Sap_Flow(), Float)
+  CardOut (0,52560)
+EndTable
+
+
+'=========================
+'Main Program starts here'
+'=========================
+
+BeginProg
+'=====================================================================================================
+'Only make changes to this block of code in the Main Program
+'=====================================================================================================  
+ 
+  '*Note: Change the following scan interval to the desired value; by default it is set to 10 minutes
+  Scan(10, Min, 1, 0) 'Scanning every 10 minutes for data'
+    Measurement_Started = True
+    '===========================================================
+    ' 1. Start measurement on ALL sensors (C0!)
+    '===========================================================
+            '*Note: Change the sensor addresses to your SFS Addresses'
+            ''For example: If using 2 SFS on Address "1" and "2" do the following changes,
+                  '-> SensorAddr(1) = "1"
+                  '-> SensorAddr(2) = "2"
+                  '' The other sensor addresses can be left as is/ commented.
+            SensorAddr(1) = "1"  'SFS #1'
+            SensorAddr(2) = "2"  'SFS #2'
+            SensorAddr(3) = "3"  'SFS #3'
+            SensorAddr(4) = "4"  'SFS #4'
+            SensorAddr(5) = "5"  'SFS #5'
+            SensorAddr(6) = "6"  'SFS #6'
+            'Follow the same addressing pattern to add more sensor addresses'
+            
+'======================================================================================================
+'DONOT MAKE ANY CHANGES BELOW
+'======================================================================================================
+
+                Dim dummy As String * 10
+                Dim cmd As String * 5
+                
+                For s = 1 To NumSensors
+                    cmd = SensorAddr(s) & "C!"   'Force unique command string
+                    SDI12Recorder(dummy, SDI12_port, SensorAddr(s), cmd, 1, 0)
+                    Sensor_Measuring(s) = True
+                    Delay(1, 1, 2)
+                Next s
+
+    Delay(1, 156, 2) '156 Seconds Delay for the measurement to finish'
+    Supercaps_Charging = True
+
+    '===========================================================
+    ' 2a. Read D0, D1, D2 from each sensor
+    '===========================================================
+    For s = 1 To NumSensors
+
+      For cmdIndex = 0 To 2
+        SDI12_String = "" 'Clearing out the SDI12_String buffer for protecting the data against partial or failed SDI-12 response'
+        SDI12Recorder(SDI12_String, SDI12_port, SensorAddr(s), "D" & cmdIndex & "!", 1, 0, 0, 0)
+          
+        i = cmdIndex * 2 + 1 ' Base index in SDI12_Values: D0?1, D1?3, D2?5
+
+        If Len(SDI12_String) > 2 Then
+          
+          ' First value (skip address)
+          valueStr = Mid(SDI12_String, 2, 20)
+          SDI12_Values(s, i) = valueStr
+
+          ' Find second value (next sign)
+          signPos = 0
+          For j = 3 To Len(SDI12_String)
+            If Mid(SDI12_String, j, 1) = "+" OR Mid(SDI12_String, j, 1) = "-" Then
+              signPos = j
+              Exit For
+            EndIf
+          Next j
+
+          'Extract the second value and store it in next slot
+          If signPos > 0 Then
+            valueStr = Mid(SDI12_String, signPos, 20)
+            SDI12_Values(s, i + 1) = valueStr
+          EndIf
+
+        EndIf
+
+        Delay(1, 1, 2) '1 second delay between every read
+
+      Next cmdIndex
+      
+    Sensor_Measuring(s) = False
+
+    Next s
+    
+    Measurement_Started = False
+
+
+    '===========================================================
+    ' 3. Map values to named outputs
+    '===========================================================
+    For s = 1 To NumSensors
+      Uncorrected_outr_HPV(s)    = SDI12_Values(s, 1)
+      Uncorrected_inr_HPV(s)     = SDI12_Values(s, 2)
+      Corrected_outr_HPV(s)      = SDI12_Values(s, 3)
+      Corrected_inr_HPV(s)       = SDI12_Values(s, 4)
+      Corrected_outr_Sap_Flow(s) = SDI12_Values(s, 5)
+      Corrected_inr_Sap_Flow(s)  = SDI12_Values(s, 6)
+    Next s
+    
+    Delay(1, 90, 2) '90 seconds Delay for the supercap to finish charging'
+    
+    Supercaps_Charging = False
+    
+    CallTable(SFS_ConcurrentMode)
+    
+  NextScan
+  
+EndProg
+
+
+
+
+
+

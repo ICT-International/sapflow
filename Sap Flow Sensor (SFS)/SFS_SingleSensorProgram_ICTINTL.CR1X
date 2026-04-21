@@ -1,0 +1,115 @@
+'************************************************************
+'   SFS Standard Measurement Program (Standard SDI-12 Mode)
+'   ICT International Pty. Ltd.
+'   Author: Rahinul Hoque
+'   Date: 08 April 2026
+'
+' Description:
+' This CRBasic program reads one ICT International SFS sensor
+' using the standard SDI-12 measurement command:
+'
+' Each measurement cycle performs:
+'   • A M! command to initiate HRM measurement
+'   • Sequential retrieval of D0, D1, and D2 data frames
+'   • Extraction of six values per sensor:
+'       - Uncorrected outer HP velocity
+'       - Uncorrected inner HP velocity
+'       - Corrected outer HP velocity
+'       - Corrected inner HP velocity
+'       - Corrected outer sap-flow velocity
+'       - Corrected inner sap-flow velocity
+'
+' Wiring:
+'   • PWR (White) -> 12V
+'   • DATA (Blue) -> C1 (SDI-12)
+'   • GND (Black) -> G
+'
+'************************************************************
+
+'======= Declarations =======
+Public SDI12_Values(6) As Float        
+Public Uncorrected_outr_HPV As Float
+Public Uncorrected_inr_HPV As Float
+Public Corrected_outr_HPV As Float
+Public Corrected_inr_HPV As Float
+Public Corrected_outr_Sap_Flow As Float
+Public Corrected_inr_Sap_Flow As Float
+Public measurementStarted As Boolean 
+
+Dim SDI12_String As String * 75        
+Dim valueStr As String * 25            
+Dim i As Long                          
+Dim j As Long                          
+Dim cmdIndex As Long                   
+Dim signPos As Long                    
+
+'======= Data Table =======
+DataTable(SFSData_StandardM, True, -1)
+  DataInterval(0, 10, Min, 0) ' Change this to the desired logging interval, by default, it is set to 10 minutes.
+  Sample(1, Uncorrected_outr_HPV, Float)
+  Sample(1, Uncorrected_inr_HPV, Float)
+  Sample(1, Corrected_outr_HPV, Float)
+  Sample(1, Corrected_inr_HPV, Float)
+  Sample(1, Corrected_outr_Sap_Flow, Float)
+  Sample(1, Corrected_inr_Sap_Flow, Float)
+EndTable
+
+'======= Main Program =======
+BeginProg
+  Scan(10, Min, 1, 0)   ' Change this to the desired logging interval, by default, it is set to 10 minutes.
+        measurementStarted = True
+
+    SDI12Recorder(SDI12_String, C1, 1, "M!", 1, 0, 0, 0)     ' Change the third parameter of the function to the current address of the SFS
+    
+'************************************************************
+'DONOT CHANGE ANYTHING BELOW
+'************************************************************    
+
+    Delay(1, 3, 2)
+    If measurementStarted Then
+      ' Process all three D commands in a loop
+      For cmdIndex = 0 To 2
+        SDI12_String = ""
+        ' Get data for current command (D0, D1, or D2)
+        SDI12Recorder(SDI12_String, C1, 1, "D" & cmdIndex & "!", 1, 0, 0, 0)
+        
+        ' Calculate the base array index for this command (1, 3, or 5)
+        i = cmdIndex * 2 + 1
+        
+        ' Extract values from response if the string is valid
+        If Len(SDI12_String) > 2 Then
+          ' Extract first value - Skip the address character
+          valueStr = Mid(SDI12_String, 2, 20)
+          SDI12_Values(i) = valueStr      ' CRBasic will auto-convert to float
+          
+          ' Find the position of second value in the string (after first sign)
+          signPos = 0
+          For j = 3 To Len(SDI12_String)
+            If Mid(SDI12_String, j, 1) = "+" OR Mid(SDI12_String, j, 1) = "-" Then
+              signPos = j
+              Exit For
+            EndIf
+          Next j
+          
+          ' Extract and store second value if found
+          If signPos > 0 Then
+            valueStr = Mid(SDI12_String, signPos, 20)
+            SDI12_Values(i + 1) = valueStr  ' CRBasic will auto-convert to float
+          EndIf
+        EndIf
+        Delay(1, 1, 2)                   ' Delays for 1 seconds
+      Next cmdIndex
+    EndIf
+    
+    measurementStarted = False
+    
+    Uncorrected_outr_HPV = SDI12_Values(1)
+    Uncorrected_inr_HPV = SDI12_Values(2)
+    Corrected_outr_HPV = SDI12_Values(3)
+    Corrected_inr_HPV = SDI12_Values(4)
+    Corrected_outr_Sap_Flow = SDI12_Values(5)
+    Corrected_inr_Sap_Flow = SDI12_Values(6)
+    
+    CallTable(SFSData_StandardM)
+  NextScan
+EndProg
