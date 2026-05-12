@@ -75,7 +75,7 @@ EndTable
 
 BeginProg
 
-Scan(15, Sec, 1, 0)
+Scan(1, Sec, 1, 0)
  'Clear Button is used to clear previous logs
     If Clear_Button = True Then
         Pass = False
