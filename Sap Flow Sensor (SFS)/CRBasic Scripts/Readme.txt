@@ -46,15 +46,6 @@ Useful for:
 - Environmental context for sap flow data  
 
 ---
-### 5. Diagnostic Use Only - Jig Test  
-**File:** `Jigtest.CR1X`  
-A full example of how to test SFS.
-Useful for:
-- ICT Production/Sales
-- Customers to diagnose sensors
-- Contractor/Distributor diagnostic option
-
----
 
 ## Notes
 - All programs are written in CRBasic for Campbell Scientific dataloggers.  
