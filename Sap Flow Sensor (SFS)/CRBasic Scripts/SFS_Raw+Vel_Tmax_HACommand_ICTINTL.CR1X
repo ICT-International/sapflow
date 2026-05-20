@@ -2,7 +2,10 @@
 ' SFS Single-Sensor CRBasic Program (Tmax Method)
 ' ICT International Pty. Ltd.
 ' Author: Rahinul Hoque
-' Date: 09/04/2026
+' Date: 21/04/2026
+'****************************************
+' Supports SFS Firmware v0-4-5 and above
+'****************************************
 '
 ' Description:
 ' This program operates one ICT International SFS (Sap Flow Sensor)
@@ -10,8 +13,8 @@
 ' SDI-12 bus (C1) to ensure reliable communication during high-volume
 ' data transfers.
 '
-' The SFS uses the "HA!" command, which returns 480 values per
-' measurement (120 seconds of high-resolution temperature data).
+' The SFS uses the "HA!" command, which returns 600 values per
+' measurement (150 seconds of high-resolution temperature data).
 ' Because this is a large data stream, a dedicated SDI-12 line
 ' prevents timing overlap and communication errors during heat-pulse
 ' acquisition.
@@ -19,7 +22,7 @@
 ' Measurement Cycle:
 '   - One full heat-pulse measurement is performed every
 '     10 minutes (600 seconds).
-'   - The sensor collects 120 seconds of temperature data from
+'   - The sensor collects 150 seconds of temperature data from
 '     inner and outer thermocouples.
 '   - Tmax_OUT and Tmax_IN are extracted from the temperature
 '     curves and used to compute heat-pulse velocity.
@@ -36,17 +39,19 @@
 '************************************************************
 
 
-Const ValuesPerSensor = 480
-Const RowsPerSensor   = 120
+Const ValuesPerSensor = 600
+Const RowsPerSensor   = 150
+Const TminDetect      = 30        ' Start Tmax detection at 30 seconds
 
 Public RawData(ValuesPerSensor)
+
 
 '==========================
 ' USER CONFIGURATION
 '==========================
 Public Addr As String * 2 = "1"     ' SDI-12 address of SFS on C1
-Public x_out = 0.5                  ' Heater → outer thermistor distance (cm)
-Public x_in  = 0.5                  ' Heater → inner thermistor distance (cm)
+Public x_out = 0.5                  ' Heater -> outer thermistor distance (cm)
+Public x_in  = 0.5                  ' Heater -> inner thermistor distance (cm)
 Const Kappa = 0.0025                ' Thermal diffusivity
 
 '==========================
@@ -62,7 +67,7 @@ Public SFS_Measuring As Boolean
 '************************************************************
 ' RAW DATA TABLE
 '************************************************************
-DataTable (Raw1, True, -1)
+DataTable (Thermistor_Data_Raw, True, -1)
   Sample (1, TimeSec, FP2)
   Sample (1, T1_OUT, FP2)
   Sample (1, T1_IN,  FP2)
@@ -73,7 +78,7 @@ EndTable
 '************************************************************
 ' VELOCITY TABLE
 '************************************************************
-DataTable (Vel1, True, -1)
+DataTable (SapVelocity_Tmax, True, -1)
   Sample (1, Tmax_OUT, FP2)
   Sample (1, Tmax_IN,  FP2)
   Sample (1, VEL_OUT,  FP2)
@@ -115,19 +120,27 @@ BeginProg
 
         TimeSec = n - 1
 
-        If T1_OUT > MaxT_OUT Then
-          MaxT_OUT = T1_OUT
-          Tmax_OUT = TimeSec
+        '--------------------------------------------------------
+        ' Only detect Tmax after 30 seconds
+        '--------------------------------------------------------
+        If TimeSec >= TminDetect Then
+
+          If T1_OUT > MaxT_OUT Then
+            MaxT_OUT = T1_OUT
+            Tmax_OUT = TimeSec
+          EndIf
+
+          If T1_IN > MaxT_IN Then
+            MaxT_IN = T1_IN
+            Tmax_IN = TimeSec
+          EndIf
+
         EndIf
 
-        If T1_IN > MaxT_IN Then
-          MaxT_IN = T1_IN
-          Tmax_IN = TimeSec
-        EndIf
-
-        CallTable Raw1
+        CallTable Thermistor_Data_Raw
 
       Next n
+
 
       '--------------------------------------------------------
       ' 3. VELOCITY CALCULATION (cm/hr)
@@ -144,11 +157,10 @@ BeginProg
         VEL_IN = 0
       EndIf
 
-      CallTable Vel1
+      CallTable SapVelocity_Tmax
       
     SFS_Measuring = False
 
   NextScan
 
 EndProg
-
