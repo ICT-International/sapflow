@@ -1,6 +1,11 @@
-// Sap Flow Water Usage Calculation for ICT Probe Design 1 (e.g. SFM1 and SFM1x)
-// sap_flow_correction.js
+/* Heat Ratio Mode Sap Flow Water Usage Calculation for ICT Probe Designs
+e.g. 
+SFM1     (35mm measurement probes only)
+SFM1x    (35mm measurement probes only)
+SFS      (35mm, 22.5 or 12mm probes)
+*/
 
+// sap_flow_correction.js
 
 // Required modules
 const sql = require('mssql');
@@ -48,22 +53,25 @@ async function processMessages(messages) {
           // --- Metadata ---
           // Physical Probe Installation Protocol
           let circumference = 1.3674;         // Circumference of plant at point of measurement in metres, a 10cm radius or 20cm diameter Tree/Plant in this example.
-          let wc = 1.7283;                    // Wounding Coefficient (Table 1, https://doi.org/10.1093/treephys/21.9.589).
           let bark_thickness = 0.0050;        // Manually measured Bark Thickness in meters, e.g. 0.5cm = 0.0050m
           let sapwood_depth = 0.0420;         // Manually measured Sapwood depth in meters, e.g. 4.2cm = 0.0420m
+          let offset_inner = 0;               // Manually applied Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
+          let offset_outer = 0;               // Manually applied Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
+          let rem_type = "linear_decay";      // Remainder type, linear_decay or inner_velocity
+          // Correction Factors
+          let wc = 1.7283;                    // Wounding Coefficient (Table 1, https://doi.org/10.1093/treephys/21.9.589).
+          let fsv = 0.64347;                  // Sap Flow Factor, Simplified "Vs" Calculation for Wood and Water Thermal Properties.
+
+      // If defined as 35mm Probe Design:    
           let probe_length = 0.035;           // Probe length in meters, here HRM1/SFM1/SFM1x Probe Set = 3.5cm therefore 0.035m
           let probe_depths = [0.0075, 0.0225];// Depth of measurement point 0 and 1 within the Xylem Tissue.
               /*
                 0 reference in array = outer thermistor position within the sapwood (measurement point to the surface of the Xylem).
                 1 reference in array = inner thermistor position within the sapwood (measurement point to the surface of the Xylem).
               */
-          let fsv = 0.64347;                  // Sap Flow Factor, Simplified "Vs" Calculation for Wood and Water Thermal Properties. 
-          let offset_inner = 0;               // Manually applied Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
-          let offset_outer = 0;               // Manually applied Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
           let probe_edge = 0.030;             // Probe edge in meters, Depth of the probe tip in the Xylem from the installation surface, e.g: probe_depths[1] + 0.0075m
-          let rem_type = "linear_decay";      // Remainder type, linear_decay or inner_velocity
-
-          // --- Convert Units from Meters to Centimeters ---
+          
+// --- Convert Units from Meters to Centimeters ---
           probe_edge *= 100;
           probe_length *= 100;
           probe_depths = probe_depths.map(pd => pd * 100);
