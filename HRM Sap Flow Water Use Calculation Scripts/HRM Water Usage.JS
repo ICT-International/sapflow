@@ -51,12 +51,12 @@ async function processMessages(messages) {
           const UncorrectedOuter = getValueFromData(message.uplink_message.decoded_payload.data, "uncorrected-outer");
 
           // --- Metadata ---
-          // Physical Probe Installation Protocol
+          // Specific Tree Parameterisation
           let circumference = 1.3674;         // Circumference of plant at point of measurement in metres, a 10cm radius or 20cm diameter Tree/Plant in this example.
           let bark_thickness = 0.0050;        // Manually measured Bark Thickness in meters, e.g. 0.5cm = 0.0050m
           let sapwood_depth = 0.0420;         // Manually measured Sapwood depth in meters, e.g. 4.2cm = 0.0420m
-          let offset_inner = 0;               // Manually applied Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
-          let offset_outer = 0;               // Manually applied Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
+          let bao_outer = 0;                  // Manually applied Baseline Asymmetry Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
+          let bao_inner = 0;                  // Manually applied Baseline Asymmetry Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
           let rem_type = "linear_decay";      // Remainder type, linear_decay or inner_velocity
           // Correction Factors
           let wc = 1.7283;                    // Wounding Coefficient (Table 1, https://doi.org/10.1093/treephys/21.9.589).
@@ -70,6 +70,7 @@ async function processMessages(messages) {
                 1 reference in array = inner thermistor position within the sapwood (measurement point to the surface of the Xylem).
               */
           let probe_edge = 0.030;             // Probe edge in meters, Depth of the probe tip in the Xylem from the installation surface, e.g: probe_depths[1] + 0.0075m
+          // Probe edge in future could be automatically caluclated by subtracting the user defined bark_thickness from the probe_lenght, e.g. 0.035 - 0.0050 = 0.030
           
 // --- Convert Units from Meters to Centimeters ---
           probe_edge *= 100;
@@ -124,21 +125,21 @@ async function processMessages(messages) {
           }
 
           // --- Sap Flow Calculations ---
-          // Apply offsets to uncorrected values
-          const Vh_outer = UncorrectedOuter + offset_outer;
-          const Vh_inner = UncorrectedInner + offset_inner;
+          // Apply BAO offsets to uncorrected heatpulse velocity values (Vh) direct from device.
+          const Vh_baoc_outer = UncorrectedOuter + bao_outer; // Correct for Baseline Asymmetry Offset.
+          const Vh_baoc_inner = UncorrectedInner + bao_inner; // Correct for Baseline Asymmetry Offset.
 
           // Corrected Heatpulse Velocity
-          const Vc_outer = Vh_outer * wc;
-          const Vc_inner = Vh_inner * wc;
+          const Vc_outer = Vh_baoc_outer * wc; // Corrected Heat Pulse Velocity (Vc) calculated from Wounding Coefficient
+          const Vc_inner = Vh_baoc_inner * wc; // Corrected Heat Pulse Velocity (Vc) calculated from Wounding Coefficient
 
           // Sap Velocities, in cm/hr
-          const Vs_outer = Vc_outer * fsv;
-          const Vs_inner = Vc_inner * fsv;
+          const Vs_outer = Vc_outer * fsv; // Correcting for Sap Velocity Factor (Thermal Properties)
+          const Vs_inner = Vc_inner * fsv; // Correcting for Sap Velocity Factor (Thermal Properties)
 
           // Sap Flow of each annulus, in kg/hr
           const outer_sapflow = (Vs_outer * outer_sapwood_annulus) / 1000; // Converts cm/hr to kg/hr
-          const inner_sapflow = (Vs_inner * inner_sapwood_annulus) / 1000;
+          const inner_sapflow = (Vs_inner * inner_sapwood_annulus) / 1000; // Converts cm/hr to kg/hr
 
           // Calculate Remainder Sap Flow
           let rem_sapflow = 0;
@@ -157,14 +158,14 @@ async function processMessages(messages) {
             DeviceID,
             Time,
             BatteryVoltage,
-            UncorrectedInner,
             UncorrectedOuter,
-            VhInner: Vh_inner,
-            VhOuter: Vh_outer,
-            CorrectedInner: Vc_inner,
+            UncorrectedInner,
+            Vh_baoc_outer: Vh_baoc_outer,
+            Vh_baoc_inner: Vh_baoc_inner,
             CorrectedOuter: Vc_outer,
-            SapVelocityInner: Vs_inner,
+            CorrectedInner: Vc_inner,
             SapVelocityOuter: Vs_outer,
+            SapVelocityInner: Vs_inner,
             OuterSapflow: outer_sapflow,
             InnerSapflow: inner_sapflow,
             RemSapflow: rem_sapflow,
