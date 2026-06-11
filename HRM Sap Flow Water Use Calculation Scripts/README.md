@@ -2,22 +2,22 @@
 
 ```javascript
 // 1. Uncorrected Values
-// These are the raw calculation of heatpulse velocities from the inner and outer probe sets. unit is cm/h
-const UncorrectedInner = getValueFromData(message.uplink_message.decoded_payload.data, "uncorrected-inner");
+// These are the raw calculation of heatpulse velocities from the outer and inner probe sets. unit is cm/h
 const UncorrectedOuter = getValueFromData(message.uplink_message.decoded_payload.data, "uncorrected-outer");
+const UncorrectedInner = getValueFromData(message.uplink_message.decoded_payload.data, "uncorrected-inner");
 
-// 2. Applying Asymmetric Offsets
+// 2. Applying Baseline Asymmetric Offsets
 // Offsets are applied to account for sensor missalignment during installation.
 // Offsets larger than +/- 5cm/h are not recommended - please refer to user manual.
-// The offset values (offset_inner, offset_outer) are subtracted from the uncorrected readings.
-const Vh_outer = UncorrectedOuter + offset_outer;
-const Vh_inner = UncorrectedInner + offset_inner;
+// The offset values (bao_outer, bao_inner) are added to the uncorrected readings, and negative BAO will subtract from a positive direct reading.
+const Vh_baoc_outer = UncorrectedOuter + bao_outer;
+const Vh_baoc_inner = UncorrectedInner + bao_inner;
 
 // 3. Correcting the Heat Pulse Velocity for Wounding Effect (Vc)
-// Multiply the heat pulse velocities (Vh_outer and Vh_inner) by a correction factor (wc), 
+// Multiply the heat pulse velocities (Vh_baoc_outer and Vh_baoc_inner) by a correction factor (wc), 
 // Wounding Coefficient is typically a fixed value of 1.7823.
-const Vc_outer = Vh_outer * wc;
-const Vc_inner = Vh_inner * wc;
+const Vc_outer = Vh_baoc_outer * wc;
+const Vc_inner = Vh_baoc_inner * wc;
 
 // 4. Calculating Sap Velocity
 // The sap velocity (Vs_outer and Vs_inner) is derived by multiplying the corrected heat pulse velocity (Vc) 
