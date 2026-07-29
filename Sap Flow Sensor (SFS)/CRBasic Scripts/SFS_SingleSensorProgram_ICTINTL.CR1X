@@ -1,4 +1,4 @@
- '************************************************************
+'************************************************************
 '   SFS Standard Measurement Program (Standard SDI-12 Mode)
 '   ICT International Pty. Ltd.
 '   Author: Rahinul Hoque
@@ -35,10 +35,7 @@ Const SFS_Address = 0 ' SDI-12 address of the SFS sensor
 Const ScanInterval = 10 ' Minutes
 
 Const LogInterval = 10 ' Minutes
-
 'Note: ScanInterval cannot be greater than LogInterval
-
-
 '************************************************************
 'DONOT CHANGE ANYTHING BELOW
 '************************************************************    
@@ -46,8 +43,8 @@ Const LogInterval = 10 ' Minutes
 
 
 '======= Declarations =======
-Public Uncorrected_outr_HPV As Float
-Public Uncorrected_inr_HPV As Float
+Public Uncorrected_Out As Float
+Public Uncorrected_In As Float
 Public measurementStarted As Boolean 
 
 Dim SDI12_String As String * 75        
@@ -58,8 +55,8 @@ Dim signPos As Long
 '======= Data Table =======
 DataTable(SFSData_StandardM, True, -1)
   DataInterval(0, LogInterval, Min, 0)
-  Sample(1, Uncorrected_outr_HPV, Float)
-  Sample(1, Uncorrected_inr_HPV, Float)
+  Sample(1, Uncorrected_Out, Float)
+  Sample(1, Uncorrected_In, Float)
 EndTable
 
 '======= Main Program =======
@@ -77,7 +74,7 @@ BeginProg
         If Len(SDI12_String) > 2 Then
           ' Extract first value - Skip the address character
           valueStr = Mid(SDI12_String, 2, 20)
-          Uncorrected_outr_HPV = valueStr      ' CRBasic will auto-convert to float
+          Uncorrected_Out = valueStr      ' CRBasic will auto-convert to float
           
           ' Find the position of second value in the string (after first sign)
           signPos = 0
@@ -91,7 +88,7 @@ BeginProg
           ' Extract and store second value if found
           If signPos > 0 Then
             valueStr = Mid(SDI12_String, signPos, 20)
-            Uncorrected_inr_HPV = valueStr  ' CRBasic will auto-convert to float
+            Uncorrected_In = valueStr  ' CRBasic will auto-convert to float
           EndIf
         EndIf
     EndIf
