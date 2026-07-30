@@ -25,9 +25,9 @@ Ideal for:
 
 ---
 
-### 3. Sap Flow Sensor — High‑Volume Command + Tmax Method  
-**File:** `SFS_Raw+Vel_Tmax_HACommand_ICTINTL.CR1X`  
-A program implementing the high‑volume (HA) command with the Tmax method, commonly used for:
+### 3. Sap Flow Sensor — High‑Volume Command (Raw Heat Trace)
+**File:** `SFS_Raw_Heat_Trace_ICTINTL.CR1X`  
+A program implementing the high‑volume (HA) command to acquire raw heat trace data, commonly used for:
 - High‑resolution sap flow measurements   
 - Advanced research applications  
 
