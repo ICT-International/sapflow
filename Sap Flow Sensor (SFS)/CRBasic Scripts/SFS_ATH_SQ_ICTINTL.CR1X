@@ -4,19 +4,15 @@
 ' SFS + ATH-VPD + SQ421X-SS CRBasic Program
 ' ICT International Pty. Ltd.
 ' Program Author: Rahinul Hoque
-' Date: 08/04/2026
+' Date: 30/07/2026
 '
 ' Description:
 '   - 1x SFS sap flow sensors on SDI-12 port C1 (address "0")
 '   - 1x ATH-VPD sensor on SDI-12 port C1 (address "1")
 '   - 1x SQ421X-SS sensor on SDI-12 port C1 (address "2")
-'   - SFS returns 6 values:
-'       1: Uncorrected outer HPV
-'       2: Uncorrected inner HPV
-'       3: Corrected outer HPV
-'       4: Corrected inner HPV
-'       5: Corrected outer sap flow
-'       6: Corrected inner sap flow
+'   - SFS returns 2 values:
+'       1: Uncorrected outer HPV (cm/hr)
+'       2: Uncorrected inner HPV (cm/hr)
 '   - ATH-VPD returns 4 values in D0!:
 '       1: Air Temperature (°C)
 '       2: Relative Humidity (%)
@@ -68,14 +64,9 @@ Const ScanInterval_Min = 10 'Change this to the desired scan and data logging in
 ' Declarations
 '========================
 Dim  SensorAddr(NumSensors) As String * 1
-Public SDI12_Values(NumSensors, 6) As Float
 
-Public Uncorrected_outr_HPV(NumSensors)      As Float
-Public Uncorrected_inr_HPV(NumSensors)       As Float
-Public Corrected_outr_HPV(NumSensors)        As Float
-Public Corrected_inr_HPV(NumSensors)         As Float
-Public Corrected_outr_Sap_Flow(NumSensors)   As Float
-Public Corrected_inr_Sap_Flow(NumSensors)    As Float
+Public Uncorrected_Out(NumSensors)      As Float
+Public Uncorrected_In(NumSensors)       As Float
 
 Public Air_Temperature      As Float
 Public Relative_Humidity    As Float
@@ -99,7 +90,7 @@ Dim SQ_String    As String * 75
 Dim valueStr     As String * 25
 Dim dummy        As String * 10
 
-Dim j As Long, s As Long, cmdIndex As Long, signPos As Long
+Dim j As Long, s As Long, signPos As Long
 
 
 '========================
@@ -108,12 +99,8 @@ Dim j As Long, s As Long, cmdIndex As Long, signPos As Long
 DataTable(SFS_ATH_SQ_ICTData, True, -1)
   DataInterval(0, ScanInterval_Min, Min, 1)
 
-  Sample(NumSensors, Uncorrected_outr_HPV(),      Float)
-  Sample(NumSensors, Uncorrected_inr_HPV(),       Float)
-  Sample(NumSensors, Corrected_outr_HPV(),        Float)
-  Sample(NumSensors, Corrected_inr_HPV(),         Float)
-  Sample(NumSensors, Corrected_outr_Sap_Flow(),   Float)
-  Sample(NumSensors, Corrected_inr_Sap_Flow(),    Float)
+  Sample(NumSensors, Uncorrected_Out(),      Float)
+  Sample(NumSensors, Uncorrected_In(),       Float)
 
   Sample(1, Air_Temperature,     Float)
   Sample(1, Relative_Humidity,   Float)
@@ -131,14 +118,13 @@ EndTable
 
 
 '========================
-' Helper: read SFS D0/D1/D2
+' Helper: read SFS D0
 '========================
 Sub ReadSFS_Dblock
-  Dim baseIndex As Long
   Dim v1 As Float, v2 As Float
 
   SDI12_String = ""
-  SDI12Recorder(SDI12_String, SDI12_port, SensorAddr(s), "D" & cmdIndex & "!", 1, 0, 0, 0)
+  SDI12Recorder(SDI12_String, SDI12_port, SensorAddr(s), "D0!", 1, 0, 0, 0)
 
   If Len(SDI12_String) > 2 Then
 
@@ -160,9 +146,8 @@ Sub ReadSFS_Dblock
       v2 = 0
     EndIf
 
-    baseIndex = cmdIndex * 2 + 1
-    SDI12_Values(s, baseIndex)     = v1
-    SDI12_Values(s, baseIndex + 1) = v2
+    Uncorrected_Out(s) = v1
+    Uncorrected_In(s)  = v2
 
   EndIf
 
@@ -239,7 +224,7 @@ EndSub
 '========================
 BeginProg
 
-  SensorAddr(1) = "0" 'Change this address to the SFS address'
+  SensorAddr(1) = "6" 'Change this address to the SFS address
 
   Scan(ScanInterval_Min, Min, 1, 0)
 
@@ -261,12 +246,10 @@ BeginProg
     Supercaps_Charging = True
 
     '===========================================================
-    ' 2. Read SFS D0/D1/D2
+    ' 2. Read SFS D0
     '===========================================================
     For s = 1 To NumSensors
-      For cmdIndex = 0 To 2
         Call ReadSFS_Dblock
-      Next cmdIndex
       SFS_Measuring(s) = False
     Next s
 
@@ -306,25 +289,13 @@ BeginProg
     SQ_Measuring = False
 
     '===========================================================
-    ' 5. Map SFS values
-    '===========================================================
-    For s = 1 To NumSensors
-      Uncorrected_outr_HPV(s)      = SDI12_Values(s, 1)
-      Uncorrected_inr_HPV(s)       = SDI12_Values(s, 2)
-      Corrected_outr_HPV(s)        = SDI12_Values(s, 3)
-      Corrected_inr_HPV(s)         = SDI12_Values(s, 4)
-      Corrected_outr_Sap_Flow(s)   = SDI12_Values(s, 5)
-      Corrected_inr_Sap_Flow(s)    = SDI12_Values(s, 6)
-    Next s
-
-    '===========================================================
-    ' 6. Recharge SFS supercaps
+    ' 5. Recharge SFS supercaps
     '===========================================================
     Delay(1, Supercap_Charge_Time, 2)
     Supercaps_Charging = False
 
     '===========================================================
-    ' 7. Log data
+    ' 6. Log data
     '===========================================================
     CallTable(SFS_ATH_SQ_ICTData)
 
@@ -333,5 +304,4 @@ BeginProg
   NextScan
 
 EndProg
-
 
