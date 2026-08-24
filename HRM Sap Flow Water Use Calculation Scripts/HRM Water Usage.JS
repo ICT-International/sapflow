@@ -69,8 +69,9 @@ async function processMessages(messages) {
                 0 reference in array is the outer thermistor position within the sapwood (measurement point to the surface of the Xylem).
                 1 reference in array is the inner thermistor position within the sapwood (measurement point to the surface of the Xylem).
               */
-          let probe_edge = 0.030;             // Probe edge in meters. probe_edge is the Depth of the probe tip in the Xylem from the installation surface, e.g: probe_depths[1] + 0.0075m
-          // Probe edge in future could be automatically caluclated by subtracting the user defined bark_thickness from the probe_length, e.g. 0.035 - 0.0050 = 0.030
+          let probe_edge = 0.030;               // Probe edge in meters. probe_edge is the Depth of the probe tip in the Xylem from the installation surface, e.g: probe_depths[1] + 0.0075m
+          // Probe edge in future could be automatically calculated by subtracting the user defined bark_thickness from the probe_length, e.g. 0.035 - 0.0050 = 0.030 
+          // e.g. probe_edge = probe_length - bark_thickness;
           
 // --- Convert Units from Meters to Centimeters ---
           probe_edge *= 100;
