@@ -52,25 +52,25 @@ async function processMessages(messages) {
 
           // --- Metadata ---
           // Specific Tree Parameterisation
-          let circumference = 1.3674;         // Circumference of plant at point of measurement in metres, a 10cm radius or 20cm diameter Tree/Plant in this example.
-          let bark_thickness = 0.0050;        // Manually measured Bark Thickness in meters, e.g. 0.5cm = 0.0050m
-          let sapwood_depth = 0.0420;         // Manually measured Sapwood depth in meters, e.g. 4.2cm = 0.0420m
-          let bao_outer = 0;                  // Manually applied Baseline Asymmetry Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
-          let bao_inner = 0;                  // Manually applied Baseline Asymmetry Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
-          let rem_type = "linear_decay";      // Remainder type, linear_decay or inner_velocity
+          let circumference = 1.3674;           // Circumference of plant at point of measurement in metres, a 10cm radius or 20cm diameter Tree/Plant in this example.
+          let bark_thickness = 0.0050;          // Manually measured Bark Thickness in meters, e.g. 0.5cm = 0.0050m
+          let sapwood_depth = 0.0420;           // Manually measured Sapwood depth in meters, e.g. 4.2cm = 0.0420m
+          let bao_outer = 0;                    // Manually applied Baseline Asymmetry Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
+          let bao_inner = 0;                    // Manually applied Baseline Asymmetry Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
+          let rem_type = "linear_decay";        // Remainder type, linear_decay or inner_velocity
           // Correction Factors
-          let wc = 1.7283;                    // Wounding Coefficient (Table 1, https://doi.org/10.1093/treephys/21.9.589).
-          let fsv = 0.64347;                  // Sap Flow Factor, Simplified "Vs" Calculation for Wood and Water Thermal Properties.
+          let wc = 1.7283;                      // Wounding Coefficient (Table 1, https://doi.org/10.1093/treephys/21.9.589).
+          let fsv = 0.64347;                    // Sap Flow Factor, Simplified "Vs" Calculation for Wood and Water Thermal Properties.
 
       // If defined as 35mm Probe Design:    
-          let probe_length = 0.035;           // Probe length in meters, here HRM1/SFM1/SFM1x Probe Set = 3.5cm therefore 0.035m
-          let probe_depths = [0.0075, 0.0225];// Depth of measurement point 0 and 1 within the Xylem Tissue.
+          let probe_length = 0.035;             // Probe length in meters, here HRM1/SFM1/SFM1x Probe Set = 3.5cm therefore 0.035m
+          let probe_depths = [0.0075, 0.0225];  // Depth of measurement point 0 and 1 within the Xylem Tissue.
               /*
-                0 reference in array = outer thermistor position within the sapwood (measurement point to the surface of the Xylem).
-                1 reference in array = inner thermistor position within the sapwood (measurement point to the surface of the Xylem).
+                0 reference in array is the outer thermistor position within the sapwood (measurement point to the surface of the Xylem).
+                1 reference in array is the inner thermistor position within the sapwood (measurement point to the surface of the Xylem).
               */
-          let probe_edge = 0.030;             // Probe edge in meters, Depth of the probe tip in the Xylem from the installation surface, e.g: probe_depths[1] + 0.0075m
-          // Probe edge in future could be automatically caluclated by subtracting the user defined bark_thickness from the probe_lenght, e.g. 0.035 - 0.0050 = 0.030
+          let probe_edge = 0.030;             // Probe edge in meters. probe_edge is the Depth of the probe tip in the Xylem from the installation surface, e.g: probe_depths[1] + 0.0075m
+          // Probe edge in future could be automatically caluclated by subtracting the user defined bark_thickness from the probe_length, e.g. 0.035 - 0.0050 = 0.030
           
 // --- Convert Units from Meters to Centimeters ---
           probe_edge *= 100;
@@ -98,7 +98,8 @@ async function processMessages(messages) {
             inner_sapwood_annulus = (math.pow(((trunk_diameter / 2) - (bark_thickness + outer_annulus_width)), 2) * math.pi) -
               (math.pow(((trunk_diameter / 2) - (bark_thickness + outer_annulus_width + inner_annulus_width)), 2) * math.pi);
             rem_sapwood_annulus = 0;
-          } else if (probe_depth2 > sapwood_depth) {
+          } //
+            else if (probe_depth2 > sapwood_depth) {
             console.log('Condition 1');
             outer_annulus_width = sapwood_depth;
             inner_sapwood_annulus = 0;
