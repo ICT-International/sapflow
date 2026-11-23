@@ -27,8 +27,8 @@
 '   • Logging interval and scan interval fully user-configurable
 '
 ' Wiring Summary:
-'   • PWR (White)  → 12V
-'   • DATA (Blue)  → SDI-12 port (default: C1)
+'   • PWR (Red)  → 12V
+'   • DATA (White)  → SDI-12 port (default: C1)
 '   • GND (Black)  → G
 '
 ' This program is designed for reliable, scalable, and field-ready
