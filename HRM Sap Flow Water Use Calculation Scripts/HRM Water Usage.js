@@ -92,19 +92,23 @@ async function processMessages(messages) {
           let inner_sapwood_annulus = 0;
           let rem_sapwood_annulus = 0;
 
-          if (probe_edge >= sapwood_depth && probe_depth2 < sapwood_depth) {
+            // Installation Condition 2; 
+            if (probe_edge >= sapwood_depth && probe_depth2 < sapwood_depth) {
             console.log('Condition 2');
             outer_annulus_width = probe_depth1 + 0.75;
             inner_annulus_width = sapwood_depth - outer_annulus_width;
             inner_sapwood_annulus = (math.pow(((trunk_diameter / 2) - (bark_thickness + outer_annulus_width)), 2) * math.pi) -
               (math.pow(((trunk_diameter / 2) - (bark_thickness + outer_annulus_width + inner_annulus_width)), 2) * math.pi);
             rem_sapwood_annulus = 0;
-          } //
-            else if (probe_depth2 > sapwood_depth) {
+            
+            // Installation Condition 1;
+          } else if (probe_depth2 > sapwood_depth) {
             console.log('Condition 1');
             outer_annulus_width = sapwood_depth;
             inner_sapwood_annulus = 0;
             rem_sapwood_annulus = 0;
+
+            // Installation Condition 3;
           } else if (sapwood_depth > probe_edge) {
             console.log('Condition 3');
             outer_annulus_width = probe_depth1 + 0.75;
