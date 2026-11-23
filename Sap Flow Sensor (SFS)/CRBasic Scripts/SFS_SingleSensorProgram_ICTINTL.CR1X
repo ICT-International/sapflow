@@ -16,8 +16,8 @@
 '       - Uncorrected inner Heat Pulse velocity
 '
 ' Wiring:
-'   • PWR (White) -> 12V
-'   • DATA (Blue) -> C1 (SDI-12)
+'   • PWR (Red) -> 12V
+'   • DATA (White) -> C1 (SDI-12)
 '   • GND (Black) -> G
 '
 '************************************************************
