@@ -66,18 +66,27 @@ async function processMessages(messages) {
           // Fixed Probe Designs:
           // If defined as 35mm probe set
           if needletype = "sf35" {
-            let probe_length = 0.035;             // Probe length in meters, here HRM1/SFM1/SFM1x Probe Set = 3.5cm therefore 0.035m
+            let probe_length = 0.035;                                                   // Probe length in meters, here HRM1/SFM1/SFM1x Probe Set = 3.5cm therefore 0.035m
             let probe_depths = [(0.0125 - bark_thickness), (0.0275 - bark_thickness)];  // Depth of measurement point 0 (outer) and 1 (inner) within the Xylem Tissue.
-            let probe_edge = (probe_length - bark_thickness); // Probe edge in meters. probe_edge is the Depth of the probe tip in the Xylem from the installation surface, e.g: probe_depths[1] + 0.0075m
+            let probe_edge = (probe_length - bark_thickness);                           // Probe edge in meters. probe_edge is the Depth of the probe tip in the Xylem from the installation surface, e.g: probe_depths[1] + 0.0075m
               /*
                 0 reference in array is the outer thermistor position within the sapwood (measurement point to the surface of the Xylem).
                 1 reference in array is the inner thermistor position within the sapwood (measurement point to the surface of the Xylem).
               */
-            }
-          else if needletype = "sf22.5" {
-            let probe_length = 0.0225;             // Probe length in meters, here HRM1/SFM1/SFM1x Probe Set = 3.5cm therefore 0.035m
+          } 
+          // If defined as 22.5mm probe set
+          else if needletype = "sf22.5" { 
+            let probe_length = 0.0225;                                                 // Probe length in meters, here HRM1/SFM1/SFM1x Probe Set = 3.5cm therefore 0.035m
             let probe_depths = [(0.010 - bark_thickness), (0.0175 - bark_thickness)];  // Depth of measurement point 0 and 1 within the Xylem Tissue.
-            let probe_edge = (probe_length - bark_thickness)
+            let probe_edge = (probe_length - bark_thickness);
+          }
+          // If defined as 12mm probe set
+          else if needletype = "sf12" { 
+            let probe_length = 0.012;                                                   // Probe length in meters, here HRM1/SFM1/SFM1x Probe Set = 3.5cm therefore 0.035m
+            let probe_depths = [(0.0025 - bark_thickness), (0.0095 - bark_thickness)];  // Depth of measurement point 0 and 1 within the Xylem Tissue.
+            let probe_edge = (probe_length - bark_thickness);
+          }  
+        
           
 // --- Convert Units from Meters to Centimeters ---
           probe_edge *= 100;
@@ -89,8 +98,8 @@ async function processMessages(messages) {
           let trunk_diameter = circumference / math.pi;
 
           // --- Calculate Probe Depths and Annulus Widths ---
-          let probe_depth1 = probe_length - probe_depths[1];
-          let probe_depth2 = probe_length - probe_depths[0];
+          let probe_depth2 = probe_length - probe_depths[0]; // e.g 3.5cm long needle - (outer position 1.25cm from base - 0.5cm bark thickness), thus probe_depth2 = outer
+          let probe_depth1 = probe_length - probe_depths[1]; // e.g 3.5cm long needle - (inner position 2.75cm from base - 0.5cm bark thickness), thus probe_depth1 = inner
 
           // Conditions for annulus calculations
           let outer_annulus_width, inner_annulus_width, rem_annulus_width;
