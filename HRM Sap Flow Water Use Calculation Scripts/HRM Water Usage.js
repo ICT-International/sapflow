@@ -2,6 +2,7 @@
 e.g. 
 SFM1     (35mm measurement probes only)
 SFM1x    (35mm measurement probes only)
+SFMx     (35mm measurement probes only)
 SFS      (35mm, 22.5 or 12mm probes)
 */
 
@@ -46,11 +47,10 @@ async function processMessages(messages) {
         if (message && message.uplink_message && message.uplink_message.decoded_payload) {
           const DeviceID = message.end_device_ids.device_id;
           const Time = new Date(message.received_at);
-          const BatteryVoltage = getValueFromData(message.uplink_message.decoded_payload.data, "battery-voltage");
-          const UncorrectedInner = getValueFromData(message.uplink_message.decoded_payload.data, "uncorrected-inner");
-          const UncorrectedOuter = getValueFromData(message.uplink_message.decoded_payload.data, "uncorrected-outer");
+          const UncorrectedOuterHRM = getValueFromData(message.uplink_message.decoded_payload.data, "uncorrected-outer"); // HRM calculated result for Vh Outer
+          const UncorrectedInnerHRM = getValueFromData(message.uplink_message.decoded_payload.data, "uncorrected-inner"); // HRM calculated result for Vh Inner
 
-          // --- Metadata ---
+          // --- Installation Metadata ---
           // Specific Tree Parameterisation
           let circumference = 1.3674;           // Circumference of plant at point of measurement in metres, a 10cm radius or 20cm diameter Tree/Plant in this example.
           let bark_thickness = 0.0050;          // Manually measured Bark Thickness in meters, e.g. 0.5cm = 0.0050m
@@ -58,20 +58,26 @@ async function processMessages(messages) {
           let bao_outer = 0;                    // Manually applied Baseline Asymmetry Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
           let bao_inner = 0;                    // Manually applied Baseline Asymmetry Offset to zero raw incomming data for pre-dawn correction (please see Merlin et al., 2020).
           let rem_type = "linear_decay";        // Remainder type, linear_decay or inner_velocity
-          // Correction Factors
+          let needletype = "sf35";              // sf35 = 35mm, sf22.5 = 22.5mm, sf12 = 12mm
+          // Default Correction Factors
           let wc = 1.7283;                      // Wounding Coefficient (Table 1, https://doi.org/10.1093/treephys/21.9.589).
           let fsv = 0.64347;                    // Sap Flow Factor, Simplified "Vs" Calculation for Wood and Water Thermal Properties.
 
-      // If defined as 35mm Probe Design:    
-          let probe_length = 0.035;             // Probe length in meters, here HRM1/SFM1/SFM1x Probe Set = 3.5cm therefore 0.035m
-          let probe_depths = [0.0075, 0.0225];  // Depth of measurement point 0 and 1 within the Xylem Tissue.
+          // Fixed Probe Designs:
+          // If defined as 35mm probe set
+          if needletype = "sf35" {
+            let probe_length = 0.035;             // Probe length in meters, here HRM1/SFM1/SFM1x Probe Set = 3.5cm therefore 0.035m
+            let probe_depths = [(0.0125 - bark_thickness), (0.0275 - bark_thickness)];  // Depth of measurement point 0 (outer) and 1 (inner) within the Xylem Tissue.
+            let probe_edge = (probe_length - bark_thickness); // Probe edge in meters. probe_edge is the Depth of the probe tip in the Xylem from the installation surface, e.g: probe_depths[1] + 0.0075m
               /*
                 0 reference in array is the outer thermistor position within the sapwood (measurement point to the surface of the Xylem).
                 1 reference in array is the inner thermistor position within the sapwood (measurement point to the surface of the Xylem).
               */
-          let probe_edge = 0.030;               // Probe edge in meters. probe_edge is the Depth of the probe tip in the Xylem from the installation surface, e.g: probe_depths[1] + 0.0075m
-          // Probe edge in future could be automatically calculated by subtracting the user defined bark_thickness from the probe_length, e.g. 0.035 - 0.0050 = 0.030 
-          // e.g. probe_edge = probe_length - bark_thickness;
+            }
+          else if needletype = "sf22.5" {
+            let probe_length = 0.0225;             // Probe length in meters, here HRM1/SFM1/SFM1x Probe Set = 3.5cm therefore 0.035m
+            let probe_depths = [(0.010 - bark_thickness), (0.0175 - bark_thickness)];  // Depth of measurement point 0 and 1 within the Xylem Tissue.
+            let probe_edge = (probe_length - bark_thickness)
           
 // --- Convert Units from Meters to Centimeters ---
           probe_edge *= 100;
