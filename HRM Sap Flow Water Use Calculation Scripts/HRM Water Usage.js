@@ -69,26 +69,28 @@ async function processMessages(messages) {
             let probe_length = 0.035;                                                   // Probe length in meters, here HRM1/SFM1/SFM1x Probe Set = 3.5cm therefore 0.035m
             let probe_depths = [(0.0125 - bark_thickness), (0.0275 - bark_thickness)];  // Depth of measurement point 0 (outer) and 1 (inner) within the Xylem Tissue.
             let probe_edge = (probe_length - bark_thickness);                           // Probe edge in meters. probe_edge is the Depth of the probe tip in the Xylem from the installation surface, e.g: probe_depths[1] + 0.0075m
-              /*
+            let probe_depths_halfway = 0.75; 						                                // Distance between thermistors in cm for 35mm needle type.
+			/*
                 0 reference in array is the outer thermistor position within the sapwood (measurement point to the surface of the Xylem).
                 1 reference in array is the inner thermistor position within the sapwood (measurement point to the surface of the Xylem).
               */
           } 
           // If defined as 22.5mm probe set
           else if needletype = "sf22.5" { 
-            let probe_length = 0.0225;                                                 // Probe length in meters, here HRM1/SFM1/SFM1x Probe Set = 3.5cm therefore 0.035m
-            let probe_depths = [(0.010 - bark_thickness), (0.0175 - bark_thickness)];  // Depth of measurement point 0 and 1 within the Xylem Tissue.
+            let probe_length = 0.0225;                                                  // Probe length in meters, here HRM1/SFM1/SFM1x Probe Set = 3.5cm therefore 0.035m
+            let probe_depths = [(0.010 - bark_thickness), (0.0175 - bark_thickness)];   // Depth of measurement point 0 and 1 within the Xylem Tissue.
             let probe_edge = (probe_length - bark_thickness);
+			      let probe_depths_halfway = 0.375; 											                    // Distance between thermistors in cm for 22.5mm needle type.
           }
           // If defined as 12mm probe set
           else if needletype = "sf12" { 
             let probe_length = 0.012;                                                   // Probe length in meters, here HRM1/SFM1/SFM1x Probe Set = 3.5cm therefore 0.035m
             let probe_depths = [(0.0025 - bark_thickness), (0.0095 - bark_thickness)];  // Depth of measurement point 0 and 1 within the Xylem Tissue.
             let probe_edge = (probe_length - bark_thickness);
-          }  
-        
+			      let probe_depths_halfway = 0.35; 											                      // Distance between thermistors in cm for 12mm needle type.
+          }       
           
-// --- Convert Units from Meters to Centimeters ---
+          // --- Convert Units from Meters to Centimeters ---
           probe_edge *= 100;
           probe_length *= 100;
           probe_depths = probe_depths.map(pd => pd * 100);
@@ -96,39 +98,50 @@ async function processMessages(messages) {
           sapwood_depth *= 100;
           circumference *= 100;
           let trunk_diameter = circumference / math.pi;
+        
+          // --- Apply BAO offsets to uncorrected heatpulse velocity values (Vh) direct from device ---
+          const Vh_baoc_outer = UncorrectedOuter + bao_outer;                           // Correct for Baseline Asymmetry Offset.
+          const Vh_baoc_inner = UncorrectedInner + bao_inner;                           // Correct for Baseline Asymmetry Offset.
 
+          // --- Corrected Heatpulse Velocity ---
+          const Vc_outer = Vh_baoc_outer * wc;                                          // Corrected Heat Pulse Velocity (Vc) calculated from Wounding Coefficient
+          const Vc_inner = Vh_baoc_inner * wc;                                          // Corrected Heat Pulse Velocity (Vc) calculated from Wounding Coefficient
+
+          // --- Sap Velocities, in cm/hr ---
+          const Vs_outer = Vc_outer * fsv;                                              // Correcting for Sap Velocity Factor (Thermal Properties)
+          const Vs_inner = Vc_inner * fsv;                                              // Correcting for Sap Velocity Factor (Thermal Properties)
+		  
           // --- Calculate Probe Depths and Annulus Widths ---
-          let probe_depth2 = probe_length - probe_depths[0]; // e.g 3.5cm long needle - (outer position 1.25cm from base - 0.5cm bark thickness), thus probe_depth2 = outer
-          let probe_depth1 = probe_length - probe_depths[1]; // e.g 3.5cm long needle - (inner position 2.75cm from base - 0.5cm bark thickness), thus probe_depth1 = inner
+          let probe_depth_outer = probe_length - probe_depths[0];                       // e.g 3.5cm long needle - (outer position 1.25cm from base - 0.5cm bark thickness)
+          let probe_depth_inner = probe_length - probe_depths[1];                       // e.g 3.5cm long needle - (inner position 2.75cm from base - 0.5cm bark thickness)
 
-          // Conditions for annulus calculations
+          // --- Conditions for annulus calculations ---
           let outer_annulus_width, inner_annulus_width, rem_annulus_width;
           let outer_sapwood_annulus = 0;
           let inner_sapwood_annulus = 0;
           let rem_sapwood_annulus = 0;
 
-            // Installation Condition 2; 
-            if (probe_edge >= sapwood_depth && probe_depth2 < sapwood_depth) {
-            console.log('Condition 2');
-            outer_annulus_width = probe_depth1 + 0.75;
-            inner_annulus_width = sapwood_depth - outer_annulus_width;
+          // --- Installation Condition 2: When sapwood thickness or layer is exactly the length of the probe, return inner_sapwood_annulus ---
+          if (probe_edge >= sapwood_depth && probe_depth_outer < sapwood_depth) {
+            outer_annulus_width = probe_depths[0] + probe_depths_halfway;
+            inner_annulus_width = probe_edge - outer_annulus_width;
             inner_sapwood_annulus = (math.pow(((trunk_diameter / 2) - (bark_thickness + outer_annulus_width)), 2) * math.pi) -
               (math.pow(((trunk_diameter / 2) - (bark_thickness + outer_annulus_width + inner_annulus_width)), 2) * math.pi);
             rem_sapwood_annulus = 0;
-            
-            // Installation Condition 1;
-          } else if (probe_depth2 > sapwood_depth) {
-            console.log('Condition 1');
+			    }
+			
+			    // --- Installation Condition 1: Thin sapwood layer returning only the outer_annulus_width ---
+			    else if (probe_depth_outer > sapwood_depth) {
             outer_annulus_width = sapwood_depth;
             inner_sapwood_annulus = 0;
             rem_sapwood_annulus = 0;
-
-            // Installation Condition 3;
-          } else if (sapwood_depth > probe_edge) {
-            console.log('Condition 3');
-            outer_annulus_width = probe_depth1 + 0.75;
-            inner_annulus_width = 1.5;
-            rem_annulus_width = sapwood_depth - (outer_annulus_width + inner_annulus_width);
+			    }
+			
+          // --- Installation Condition 3: when the sapwood thickness or later is greater than the length of the probe ---
+			    else if (sapwood_depth > probe_edge) {
+            outer_annulus_width = probe_depths[0] + probe_depths_halfway;
+            inner_annulus_width = probe_edge - outer_annulus_width;
+            rem_annulus_width = sapwood_depth - probe_edge;
 
             outer_sapwood_annulus = (math.pow(((trunk_diameter / 2) - bark_thickness), 2) * math.pi) -
               (math.pow(((trunk_diameter / 2) - (bark_thickness + outer_annulus_width)), 2) * math.pi);
@@ -138,31 +151,20 @@ async function processMessages(messages) {
 
             rem_sapwood_annulus = (math.pow(((trunk_diameter / 2) - (bark_thickness + outer_annulus_width + inner_annulus_width)), 2) * math.pi) -
               (math.pow(((trunk_diameter / 2) - (bark_thickness + sapwood_depth)), 2) * math.pi);
-          } else {
-            // Default values if none of the conditions are met
+			    }
+			
+			    // --- Default values if none of the conditions are met ---
+			    else { 
             outer_annulus_width = 0;
             inner_annulus_width = 0;
             rem_sapwood_annulus = 0;
-          }
+			    }
 
-          // --- Sap Flow Calculations ---
-          // Apply BAO offsets to uncorrected heatpulse velocity values (Vh) direct from device.
-          const Vh_baoc_outer = UncorrectedOuter + bao_outer; // Correct for Baseline Asymmetry Offset.
-          const Vh_baoc_inner = UncorrectedInner + bao_inner; // Correct for Baseline Asymmetry Offset.
-
-          // Corrected Heatpulse Velocity
-          const Vc_outer = Vh_baoc_outer * wc; // Corrected Heat Pulse Velocity (Vc) calculated from Wounding Coefficient
-          const Vc_inner = Vh_baoc_inner * wc; // Corrected Heat Pulse Velocity (Vc) calculated from Wounding Coefficient
-
-          // Sap Velocities, in cm/hr
-          const Vs_outer = Vc_outer * fsv; // Correcting for Sap Velocity Factor (Thermal Properties)
-          const Vs_inner = Vc_inner * fsv; // Correcting for Sap Velocity Factor (Thermal Properties)
-
-          // Sap Flow of each annulus, in kg/hr
+          // --- Sap Flow of each annulus, in kg/hr ---
           const outer_sapflow = (Vs_outer * outer_sapwood_annulus) / 1000; // Converts cm/hr to kg/hr
           const inner_sapflow = (Vs_inner * inner_sapwood_annulus) / 1000; // Converts cm/hr to kg/hr
 
-          // Calculate Remainder Sap Flow
+          // --- Calculate Remainder Sap Flow ---
           let rem_sapflow = 0;
           if (rem_type === "linear_decay") {
             rem_sapflow = (Vs_inner / 2 * rem_sapwood_annulus) / 1000;
@@ -170,7 +172,7 @@ async function processMessages(messages) {
             rem_sapflow = (Vs_inner * rem_sapwood_annulus) / 1000;
           }
 
-          // Total Sap Flow, in kg/hr
+          // --- Total Sap Flow, in kg/hr ---
           const total_sapflow = outer_sapflow + inner_sapflow + rem_sapflow;
 
           // --- Collect Data for Hourly and Daily Usage ---
